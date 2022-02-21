@@ -1,4 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTweetDto } from './dto/create.dto';
 import { UpdateTweetDto } from './dto/update.dto';
 import { Tweet } from './tweet.interface';
@@ -8,43 +9,36 @@ export class TweetsService {
   private lastTweetId = 0;
   private tweets: Tweet[] = [];
 
+  constructor(private readonly prismaService: PrismaService) { }
+
   getAll() {
-    return this.tweets;
+    return this.prismaService.tweet.findMany();
   }
 
-  getById(id: number) {
-    const tweet = this.tweets.find((tweet) => tweet.id === id);
+  async getById(id: number) {
+    const tweet = await this.prismaService.tweet.findUnique({ where: { id } });
 
     if (tweet) return tweet;
     throw new HttpException('TWEET_NOT_FOUND', HttpStatus.NOT_FOUND);
   }
 
-  update(id: number, tweet: UpdateTweetDto): Tweet {
-    const index = this.tweets.findIndex((tweet) => tweet.id === id);
-    if (index > -1) {
-      this.tweets[index].content = tweet.content;
-      return tweet;
-    }
-
-    throw new HttpException('TWEET_NOT_FOUND', HttpStatus.NOT_FOUND);
+  async update(id: number, tweet: UpdateTweetDto) {
+    return this.prismaService.tweet.update({
+      where: { id },
+      data: { ...tweet },
+    });
   }
 
-  create(tweet: CreateTweetDto): Tweet {
+  async create(tweet: CreateTweetDto) {
     const newTweet = {
       id: ++this.lastTweetId,
       ...tweet,
     };
 
-    this.tweets.push(newTweet);
-    return newTweet;
+    return this.prismaService.tweet.create({ data: { ...newTweet } });
   }
 
   delete(id: number) {
-    const index = this.tweets.findIndex((tweet) => tweet.id === id);
-    if (index > -1) {
-      this.tweets.splice(index, 1);
-    }
-
-    throw new HttpException('TWEET_NOT_FOUND', HttpStatus.NOT_FOUND);
+    return this.prismaService.tweet.delete({ where: { id } });
   }
 }

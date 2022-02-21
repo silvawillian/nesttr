@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
-import { TweetsController } from './tweets/tweets.controller';
-import { TweetsService } from './tweets/tweets.service';
+import { TweetsModule } from './tweets/tweets.module';
+import { PrismaService } from './prisma/prisma.service';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
-  imports: [],
-  controllers: [TweetsController],
-  providers: [TweetsService],
+  imports: [TweetsModule, PrismaModule],
+  controllers: [],
+  providers: [],
 })
 export class AppModule { }
